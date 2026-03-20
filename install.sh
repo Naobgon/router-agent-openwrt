@@ -69,8 +69,8 @@ ask() {
     eval val=\"\${$var}\"
 
     if [ -z "$val" ]; then
-        printf "%s: " "$text"
-        read input
+        printf "%s: " "$text" >/dev/tty
+        IFS= read -r input </dev/tty
         eval "$var=\"\$input\""
     fi
 }
@@ -90,7 +90,9 @@ download_agent() {
 }
 
 backup_config() {
-    [ -f "$CONFIG_PATH" ] && cp "$CONFIG_PATH" "$CONFIG_PATH.bak"
+    if [ -f "$CONFIG_PATH" ]; then
+        cp "$CONFIG_PATH" "$CONFIG_PATH.bak"
+    fi
 }
 
 write_config() {
@@ -129,8 +131,13 @@ EOF
     chmod +x "$INIT_PATH"
 }
 
-start_agent_service() {
+enable_service() {
+    echo "Включаю автозапуск..."
     /etc/init.d/router-agent enable
+}
+
+restart_service() {
+    echo "Запускаю сервис..."
     /etc/init.d/router-agent restart
 }
 
@@ -145,7 +152,8 @@ main() {
     backup_config
     write_config
     write_service
-    start_agent_service
+    enable_service
+    restart_service
 
     echo ""
     echo "Готово:"
